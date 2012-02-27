@@ -2,7 +2,7 @@ var test = require('testling');
 var vm = require('./');
 
 test('vmRunInNewContext', function (t) {
-    //t.plan(4);
+    t.plan(5);
     
     t.equal(vm.runInNewContext('a + 5', { a : 100 }), 105);
     
