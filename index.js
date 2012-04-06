@@ -76,8 +76,10 @@ exports.createContext = Script.createContext = function (context) {
     // not really sure what this one does
     // seems to just make a shallow copy
     var copy = {};
-    forEach(Object_keys(context), function (key) {
-        copy[key] = context[key];
-    });
+    if(typeof context === 'object') {
+        forEach(Object_keys(context), function (key) {
+            copy[key] = context[key];
+        });
+    }
     return copy;
 };
