@@ -20,3 +20,15 @@ test('vmRunInNewContext', function (t) {
     
     t.end();
 });
+
+test('vmRunInContext', function (t) {
+    t.plan(2);
+
+    var context = vm.createContext({ foo: 1 });
+
+    vm.runInContext('var x = 1', context);
+    t.deepEqual(context, { foo: 1, x: 1 });
+
+    vm.runInContext('var y = 1', context);
+    t.deepEqual(context, { foo: 1, x: 1, y: 1 });
+});
