@@ -16,6 +16,9 @@
         "browser",
         "eval"
     ],
+    "dependencies": {
+      "indexof": "0.0.1"
+    },
     "devDependencies" : {
         "tap" : "~0.2.1",
         "browserify" : "1.9.x"
