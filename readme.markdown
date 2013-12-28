@@ -2,6 +2,8 @@
 
 emulate node's vm module for the browser
 
+[![testling badge](https://ci.testling.com/substack/vm-browserify.png)](https://ci.testling.com/substack/vm-browserify)
+
 # example
 
 Just write some client-side javascript:
