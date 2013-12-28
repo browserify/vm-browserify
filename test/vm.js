@@ -1,5 +1,5 @@
-var test = require('testling');
-var vm = require('./');
+var test = require('tape');
+var vm = require('../');
 
 test('vmRunInNewContext', function (t) {
     t.plan(5);
