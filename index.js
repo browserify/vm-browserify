@@ -69,7 +69,14 @@ Script.prototype.runInThisContext = function () {
 };
 
 Script.prototype.runInNewContext = function (context) {
-    return this.runInContext(Script.createContext(context));
+    var ctx = Script.createContext(context);
+    var res = this.runInContext(ctx);
+
+    forEach(Object_keys(ctx), function (key) {
+        context[key] = ctx[key];
+    });
+
+    return res;
 };
 
 forEach(Object_keys(Script.prototype), function (name) {
