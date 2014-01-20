@@ -16,6 +16,30 @@ var forEach = function (xs, fn) {
     }
 };
 
+var defineProp = (function() {
+    try {
+        Object.defineProperty({}, '_', {});
+        return function(obj, name, value) {
+            Object.defineProperty(obj, name, {
+                writable: true,
+                enumerable: false,
+                configurable: true,
+                value: value
+            })
+        };
+    } catch(e) {
+        return function(obj, name, value) {
+            obj[name] = value;
+        };
+    }
+}());
+
+var globals = ['Array', 'Boolean', 'Date', 'Error', 'EvalError', 'Function',
+'Infinity', 'JSON', 'Math', 'NaN', 'Number', 'Object', 'RangeError',
+'ReferenceError', 'RegExp', 'String', 'SyntaxError', 'TypeError', 'URIError',
+'decodeURI', 'decodeURIComponent', 'encodeURI', 'encodeURIComponent', 'escape',
+'eval', 'isFinite', 'isNaN', 'parseFloat', 'parseInt', 'undefined', 'unescape'];
+
 function Context() {}
 Context.prototype = {};
 
@@ -40,7 +64,12 @@ Script.prototype.runInContext = function (context) {
     forEach(Object_keys(context), function (key) {
         win[key] = context[key];
     });
-     
+    forEach(globals, function (key) {
+        if (context[key]) {
+            win[key] = context[key];
+        }
+    });
+
     if (!win.eval && win.execScript) {
         // win.eval() magically appears when this is called in IE:
         win.execScript('null');
@@ -56,6 +85,12 @@ Script.prototype.runInContext = function (context) {
         // that was only introduced after the eval.
         if (key in context || indexOf(winKeys, key) === -1) {
             context[key] = win[key];
+        }
+    });
+
+    forEach(globals, function (key) {
+        if (!(key in context)) {
+            defineProp(context, key, win[key]);
         }
     });
     
