@@ -60,6 +60,7 @@ Script.prototype.runInContext = function (context) {
     document.body.appendChild(iframe);
     
     var win = iframe.contentWindow;
+    var wEval = win.eval, wExecScript = win.execScript;
     
     forEach(Object_keys(context), function (key) {
         win[key] = context[key];
@@ -70,14 +71,14 @@ Script.prototype.runInContext = function (context) {
         }
     });
 
-    if (!win.eval && win.execScript) {
+    if (!wEval && wExecScript) {
         // win.eval() magically appears when this is called in IE:
-        win.execScript('null');
+        wExecScript.call(win, 'null');
     }
     
     var winKeys = Object_keys(win);
 
-    var res = win.eval(this.code);
+    var res = wEval.call(win, this.code);
     
     forEach(Object_keys(win), function (key) {
         // Avoid copying circular objects like `top` and `window` by only
