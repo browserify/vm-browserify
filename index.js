@@ -61,6 +61,12 @@ Script.prototype.runInContext = function (context) {
     
     var win = iframe.contentWindow;
     var wEval = win.eval, wExecScript = win.execScript;
+
+    if (!wEval && wExecScript) {
+        // win.eval() magically appears when this is called in IE:
+        wExecScript.call(win, 'null');
+        wEval = win.eval;
+    }
     
     forEach(Object_keys(context), function (key) {
         win[key] = context[key];
@@ -70,11 +76,6 @@ Script.prototype.runInContext = function (context) {
             win[key] = context[key];
         }
     });
-
-    if (!wEval && wExecScript) {
-        // win.eval() magically appears when this is called in IE:
-        wExecScript.call(win, 'null');
-    }
     
     var winKeys = Object_keys(win);
 
