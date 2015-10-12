@@ -1,4 +1,4 @@
-var indexOf = require('indexof');
+var indexOf = require('component-indexof');
 
 var Object_keys = function (obj) {
     if (Object.keys) return Object.keys(obj)

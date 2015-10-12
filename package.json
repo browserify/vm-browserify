@@ -13,7 +13,7 @@
     "eval"
   ],
   "dependencies": {
-    "indexof": "0.0.1"
+    "component-indexof": "0.0.3"
   },
   "devDependencies": {
     "tape": "~2.3.2"
