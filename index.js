@@ -35,12 +35,19 @@ var defineProp = (function() {
 }());
 
 var globals = ['Array', 'Boolean', 'Date', 'Error', 'EvalError', 'Function',
-'Infinity', 'JSON', 'Math', 'NaN', 'Number', 'Object', 'RangeError',
+//'Infinity', 
+'JSON', 'Math', 'NaN', 'Number', 'Object', 'RangeError',
 'ReferenceError', 'RegExp', 'String', 'SyntaxError', 'TypeError', 'URIError',
 'decodeURI', 'decodeURIComponent', 'encodeURI', 'encodeURIComponent', 'escape',
 'eval', 'isFinite', 'isNaN', 'parseFloat', 'parseInt', 'undefined', 'unescape'];
 
-function Context() {}
+function Context() {
+  this._iframe = document.createElement('iframe');
+  if (!this._iframe.style) iframe.style = {};
+  this._iframe.style.display = 'none';
+
+  document.body.appendChild(this._iframe);
+}
 Context.prototype = {};
 
 var Script = exports.Script = function NodeScript (code) {
@@ -53,13 +60,7 @@ Script.prototype.runInContext = function (context) {
         throw new TypeError("needs a 'context' argument.");
     }
     
-    var iframe = document.createElement('iframe');
-    if (!iframe.style) iframe.style = {};
-    iframe.style.display = 'none';
-    
-    document.body.appendChild(iframe);
-    
-    var win = iframe.contentWindow;
+    var win = context._iframe.contentWindow;
     var wEval = win.eval, wExecScript = win.execScript;
 
     if (!wEval && wExecScript) {
@@ -68,35 +69,7 @@ Script.prototype.runInContext = function (context) {
         wEval = win.eval;
     }
     
-    forEach(Object_keys(context), function (key) {
-        win[key] = context[key];
-    });
-    forEach(globals, function (key) {
-        if (context[key]) {
-            win[key] = context[key];
-        }
-    });
-    
-    var winKeys = Object_keys(win);
-
     var res = wEval.call(win, this.code);
-    
-    forEach(Object_keys(win), function (key) {
-        // Avoid copying circular objects like `top` and `window` by only
-        // updating existing context properties or new properties in the `win`
-        // that was only introduced after the eval.
-        if (key in context || indexOf(winKeys, key) === -1) {
-            context[key] = win[key];
-        }
-    });
-
-    forEach(globals, function (key) {
-        if (!(key in context)) {
-            defineProp(context, key, win[key]);
-        }
-    });
-    
-    document.body.removeChild(iframe);
     
     return res;
 };
