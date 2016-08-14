@@ -104,8 +104,12 @@ exports.createContext = Script.createContext = function (context) {
     var copy = new Context();
     if(typeof context === 'object') {
         forEach(Object_keys(context), function (key) {
-            copy[key] = context[key];
+            copy._iframe.contentWindow[key] = context[key];
         });
     }
     return copy;
+};
+
+exports.isContext = function(sandbox){
+    return sandbox instanceof Context;
 };
