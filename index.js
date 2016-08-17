@@ -42,11 +42,19 @@ var globals = ['Array', 'Boolean', 'Date', 'Error', 'EvalError', 'Function',
 'eval', 'isFinite', 'isNaN', 'parseFloat', 'parseInt', 'undefined', 'unescape'];
 
 function Context() {
-  this._iframe = document.createElement('iframe');
-  if (!this._iframe.style) iframe.style = {};
-  this._iframe.style.display = 'none';
+  
+  var iframe = document.createElement('iframe');
+  if (!iframe.style) iframe.style = {};
+  iframe.style.display = 'none';
 
-  document.body.appendChild(this._iframe);
+  document.body.appendChild(iframe);
+
+  Object.defineProperty(this, "_iframe", {
+      enumerable: false,
+      writable: true
+  });
+
+  this._iframe = iframe;
 }
 Context.prototype = {};
 
@@ -68,9 +76,34 @@ Script.prototype.runInContext = function (context) {
         wExecScript.call(win, 'null');
         wEval = win.eval;
     }
+
+    forEach(Object_keys(context), function (key) {
+        win[key] = context[key];
+    });
+    forEach(globals, function (key) {
+        if (context[key]) {
+            win[key] = context[key];
+        }
+    });
     
+    var winKeys = Object_keys(win);
+
     var res = wEval.call(win, this.code);
     
+    forEach(Object_keys(win), function (key) {
+        // Avoid copying circular objects like `top` and `window` by only
+        // updating existing context properties or new properties in the `win`
+        // that was only introduced after the eval.
+        if (key in context || indexOf(winKeys, key) === -1) {
+            context[key] = win[key];
+        }
+    });
+
+    forEach(globals, function (key) {
+        if (!(key in context)) {
+            defineProp(context, key, win[key]);
+        }
+    });
     return res;
 };
 
@@ -104,6 +137,7 @@ exports.createContext = Script.createContext = function (context) {
     var copy = new Context();
     if(typeof context === 'object') {
         forEach(Object_keys(context), function (key) {
+            copy[key] = context[key];
             copy._iframe.contentWindow[key] = context[key];
         });
     }

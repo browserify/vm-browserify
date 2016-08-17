@@ -33,3 +33,19 @@ test('vmRunInContext', function (t) {
     vm.runInContext('var y = 1', context);
     t.deepEqual(context, { foo: 1, x: 1, y: 1 });
 });
+
+
+test('vmRunInContext with closure', function (t) {
+    t.plan(4);
+
+    var context = vm.createContext();
+
+    vm.runInContext('var x = 1', context);
+    t.deepEqual(context, { x: 1 });
+
+    vm.runInContext('function y() { return ++x; }', context);
+    var x = vm.runInContext('y()', context);
+    t.equal(x, 2);
+    t.equal(context.x, 2);
+    t.equal(typeof context.y, 'function');
+});
