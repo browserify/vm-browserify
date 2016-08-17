@@ -35,7 +35,7 @@ var defineProp = (function() {
 }());
 
 var globals = ['Array', 'Boolean', 'Date', 'Error', 'EvalError', 'Function',
-'Infinity', 'JSON', 'Math', 'NaN', 'Number', 'Object', 'RangeError',
+'JSON', 'Math', 'NaN', 'Number', 'Object', 'RangeError',
 'ReferenceError', 'RegExp', 'String', 'SyntaxError', 'TypeError', 'URIError',
 'decodeURI', 'decodeURIComponent', 'encodeURI', 'encodeURIComponent', 'escape',
 'eval', 'isFinite', 'isNaN', 'parseFloat', 'parseInt', 'undefined', 'unescape'];
