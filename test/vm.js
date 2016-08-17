@@ -49,3 +49,11 @@ test('vmRunInContext with closure', function (t) {
     t.equal(context.x, 2);
     t.equal(typeof context.y, 'function');
 });
+
+test('isContext', function (t) {
+    t.plan(2);
+
+    var context = vm.createContext();
+    t.true(vm.isContext(context));
+    t.false(vm.isContext({}));
+});
