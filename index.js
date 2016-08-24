@@ -71,8 +71,11 @@ Script.prototype.runInContext = function (context) {
     forEach(Object_keys(context), function (key) {
         win[key] = context[key];
     });
+
     forEach(globals, function (key) {
-        if (context[key]) {
+        if (context[key] && indexOf(globals, key) === -1) {
+            // Globals are read only in strict mode. 
+            // We shouldn't try to rewrite them.
             win[key] = context[key];
         }
     });
