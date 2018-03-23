@@ -1,6 +1,6 @@
 {
   "name": "vm-browserify",
-  "version": "0.0.4",
+  "version": "1.0.0",
   "description": "vm module for the browser",
   "main": "index.js",
   "repository": {
