@@ -35,12 +35,26 @@ var defineProp = (function() {
 }());
 
 var globals = ['Array', 'Boolean', 'Date', 'Error', 'EvalError', 'Function',
-'Infinity', 'JSON', 'Math', 'NaN', 'Number', 'Object', 'RangeError',
+'JSON', 'Math', 'NaN', 'Number', 'Object', 'RangeError',
 'ReferenceError', 'RegExp', 'String', 'SyntaxError', 'TypeError', 'URIError',
 'decodeURI', 'decodeURIComponent', 'encodeURI', 'encodeURIComponent', 'escape',
 'eval', 'isFinite', 'isNaN', 'parseFloat', 'parseInt', 'undefined', 'unescape'];
 
-function Context() {}
+function Context() {
+  
+  var iframe = document.createElement('iframe');
+  if (!iframe.style) iframe.style = {};
+  iframe.style.display = 'none';
+
+  document.body.appendChild(iframe);
+
+  Object.defineProperty(this, "_iframe", {
+      enumerable: false,
+      writable: true
+  });
+
+  this._iframe = iframe;
+}
 Context.prototype = {};
 
 var Script = exports.Script = function NodeScript (code) {
@@ -53,13 +67,7 @@ Script.prototype.runInContext = function (context) {
         throw new TypeError("needs a 'context' argument.");
     }
     
-    var iframe = document.createElement('iframe');
-    if (!iframe.style) iframe.style = {};
-    iframe.style.display = 'none';
-    
-    document.body.appendChild(iframe);
-    
-    var win = iframe.contentWindow;
+    var win = context._iframe.contentWindow;
     var wEval = win.eval, wExecScript = win.execScript;
 
     if (!wEval && wExecScript) {
@@ -67,7 +75,7 @@ Script.prototype.runInContext = function (context) {
         wExecScript.call(win, 'null');
         wEval = win.eval;
     }
-    
+
     forEach(Object_keys(context), function (key) {
         win[key] = context[key];
     });
@@ -95,9 +103,6 @@ Script.prototype.runInContext = function (context) {
             defineProp(context, key, win[key]);
         }
     });
-    
-    document.body.removeChild(iframe);
-    
     return res;
 };
 
@@ -134,7 +139,12 @@ exports.createContext = Script.createContext = function (context) {
     if(typeof context === 'object') {
         forEach(Object_keys(context), function (key) {
             copy[key] = context[key];
+            copy._iframe.contentWindow[key] = context[key];
         });
     }
     return copy;
+};
+
+exports.isContext = function(sandbox){
+    return sandbox instanceof Context;
 };
