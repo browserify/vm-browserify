@@ -2,7 +2,7 @@
 
 emulate node's vm module for the browser
 
-[![testling badge](https://ci.testling.com/substack/vm-browserify.png)](https://ci.testling.com/substack/vm-browserify)
+[![Build Status](https://travis-ci.org/browserify/vm-browserify.svg?branch=master)](https://travis-ci.org/browserify/vm-browserify)
 
 # example
 
