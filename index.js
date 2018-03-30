@@ -1,5 +1,8 @@
 var indexOf = require('component-indexof');
 
+// cached iFrame instance, re-use for each runInContext Call.
+var iFrame = null;
+
 var Object_keys = function (obj) {
     if (Object.keys) return Object.keys(obj)
     else {
@@ -45,37 +48,43 @@ Context.prototype = {};
 
 var Script = exports.Script = function NodeScript (code) {
     if (!(this instanceof Script)) return new Script(code);
+    if(!iFrame) {
+      iFrame = document.createElement('iframe');
+      if (!iFrame.style) iFrame.style = {};
+      iFrame.style.display = 'none';
+      
+      document.body.appendChild(iFrame);
+    }
     this.code = code;
+    this.iFrame = iFrame;
 };
 
 Script.prototype.runInContext = function (context) {
     if (!(context instanceof Context)) {
         throw new TypeError("needs a 'context' argument.");
     }
-    
-    var iframe = document.createElement('iframe');
-    if (!iframe.style) iframe.style = {};
-    iframe.style.display = 'none';
-    
-    document.body.appendChild(iframe);
-    
-    var win = iframe.contentWindow;
+    var win = this.iFrame.contentWindow;
+    var winOriginal = Object_keys(win);
+    let originalToRestore = [];
     var wEval = win.eval, wExecScript = win.execScript;
 
-    if (!wEval && wExecScript) {
-        // win.eval() magically appears when this is called in IE:
-        wExecScript.call(win, 'null');
-        wEval = win.eval;
-    }
-    
     forEach(Object_keys(context), function (key) {
-        win[key] = context[key];
+      if(win[key] !== undefined) {
+        let restore = {
+          'key': key,
+          'value': win[key]
+        };
+        originalToRestore.push(restore);
+      }
+      win[key] = context[key];
     });
-    forEach(globals, function (key) {
-        if (context[key]) {
-            win[key] = context[key];
-        }
-    });
+
+    if (!wEval && wExecScript) {
+      // win.eval() magically appears when this is called in IE:
+      wExecScript.call(win, 'null');
+      wEval = win.eval;
+  }
+  
     
     var winKeys = Object_keys(win);
 
@@ -86,18 +95,18 @@ Script.prototype.runInContext = function (context) {
         // updating existing context properties or new properties in the `win`
         // that was only introduced after the eval.
         if (key in context || indexOf(winKeys, key) === -1) {
-            context[key] = win[key];
+            if (indexOf(globals, key) === -1) context[key] = win[key];
+            else defineProp(context, key, win[key]);
         }
+        // delete win context of extra fields
+        if (indexOf(winOriginal, key) === -1) delete win[key];
     });
 
-    forEach(globals, function (key) {
-        if (!(key in context)) {
-            defineProp(context, key, win[key]);
-        }
+    // restore context to original field values
+    forEach(originalToRestore, function (orig) {
+      win[orig.key] = orig.value;
     });
-    
-    document.body.removeChild(iframe);
-    
+
     return res;
 };
 
