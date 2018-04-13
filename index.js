@@ -1,44 +1,3 @@
-var indexOf = function (xs, item) {
-    if (xs.indexOf) return xs.indexOf(item);
-    else for (var i = 0; i < xs.length; i++) {
-        if (xs[i] === item) return i;
-    }
-    return -1;
-};
-var Object_keys = function (obj) {
-    if (Object.keys) return Object.keys(obj)
-    else {
-        var res = [];
-        for (var key in obj) res.push(key)
-        return res;
-    }
-};
-
-var forEach = function (xs, fn) {
-    if (xs.forEach) return xs.forEach(fn)
-    else for (var i = 0; i < xs.length; i++) {
-        fn(xs[i], i, xs);
-    }
-};
-
-var defineProp = (function() {
-    try {
-        Object.defineProperty({}, '_', {});
-        return function(obj, name, value) {
-            Object.defineProperty(obj, name, {
-                writable: true,
-                enumerable: false,
-                configurable: true,
-                value: value
-            })
-        };
-    } catch(e) {
-        return function(obj, name, value) {
-            obj[name] = value;
-        };
-    }
-}());
-
 var globals = ['Array', 'Boolean', 'Date', 'Error', 'EvalError', 'Function',
 'Infinity', 'JSON', 'Math', 'NaN', 'Number', 'Object', 'RangeError',
 'ReferenceError', 'RegExp', 'String', 'SyntaxError', 'TypeError', 'URIError',
@@ -73,31 +32,36 @@ Script.prototype.runInContext = function (context) {
         wEval = win.eval;
     }
     
-    forEach(Object_keys(context), function (key) {
+    Object.keys(context).forEach(function (key) {
         win[key] = context[key];
     });
-    forEach(globals, function (key) {
+    globals.forEach(function (key) {
         if (context[key]) {
             win[key] = context[key];
         }
     });
     
-    var winKeys = Object_keys(win);
+    var winKeys = Object.keys(win);
 
     var res = wEval.call(win, this.code);
     
-    forEach(Object_keys(win), function (key) {
+    Object.keys(win).forEach(function (key) {
         // Avoid copying circular objects like `top` and `window` by only
         // updating existing context properties or new properties in the `win`
         // that was only introduced after the eval.
-        if (key in context || indexOf(winKeys, key) === -1) {
+        if (key in context || winKeys.indexOf(key) === -1) {
             context[key] = win[key];
         }
     });
 
-    forEach(globals, function (key) {
+    globals.forEach(function (key) {
         if (!(key in context)) {
-            defineProp(context, key, win[key]);
+            Object.defineProperty(context, key, {
+                writable: true,
+                enumerable: false,
+                configurable: true,
+                value: win[key]
+            });
         }
     });
     
@@ -115,7 +79,7 @@ Script.prototype.runInNewContext = function (context) {
     var res = this.runInContext(ctx);
 
     if (context) {
-        forEach(Object_keys(ctx), function (key) {
+        Object.keys(ctx).forEach(function (key) {
             context[key] = ctx[key];
         });
     }
@@ -123,7 +87,7 @@ Script.prototype.runInNewContext = function (context) {
     return res;
 };
 
-forEach(Object_keys(Script.prototype), function (name) {
+Object.keys(Script.prototype).forEach(function (name) {
     exports[name] = Script[name] = function (code) {
         var s = Script(code);
         return s[name].apply(s, [].slice.call(arguments, 1));
@@ -137,7 +101,7 @@ exports.createScript = function (code) {
 exports.createContext = Script.createContext = function (context) {
     var copy = new Context();
     if(typeof context === 'object') {
-        forEach(Object_keys(context), function (key) {
+        Object.keys(context).forEach(function (key) {
             copy[key] = context[key];
         });
     }
