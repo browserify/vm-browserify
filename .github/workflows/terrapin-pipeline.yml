@@ -1,0 +1,23 @@
+name: Terrapin Package Build
+
+on: [push, repository_dispatch]
+
+jobs:
+  build:
+    runs-on: 'ubuntu-latest'
+    steps:
+    - uses: actions/checkout@master
+      name: Checkout source
+
+    - name: Build package with Oryx
+      run:  docker run --volume $(pwd):/repo --volume /home/runner/outputfolder:/output --env PRE_BUILD_COMMAND='chmod +x /repo/.github/workflows/terrapin-prebuild && /repo/.github/workflows/terrapin-prebuild && rm -rf /repo/.github/workflows/ && umask 0 && npm config set cache /tmp/.npm && mv /repo/.github/workflows/PrebuildLogic.csproj.xml /repo/.github/workflows/PrebuildLogic.csproj && dotnet run -project /repo/.github/workflows/PrebuildLogic.csproj' mcr.microsoft.com/oryx/build:latest oryx build --package /repo/ --output /output -p registry=http://localhost:7071/api/registry
+
+    - uses: jikuma/githubaction@v0.3.3-alpha
+      name: Create release
+      with:
+        operation: 'create a release'
+        repo-token: ${{ secrets.GITHUB_TOKEN }}
+        release_title: 'Terrapin release'
+        release_note: 'Job: c2431ef0-0f0c-4d3a-ad9c-4a610a3dbe07 | Package: vm-browserify@0.0.0 | Manager: Npm | Commit: ${{ github.sha }}'
+        asset_filepath: '/home/runner/outputfolder/vm-browserify-0.0.0.tgz'
+        tag_name: v0.0.0+${{ github.sha }}
